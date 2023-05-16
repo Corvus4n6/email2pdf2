@@ -507,6 +507,8 @@ def can_url_fetch(src):
         return False
     except ValueError:
         return False
+    except TimeoutError:
+        return False
     else:
         return True
 
