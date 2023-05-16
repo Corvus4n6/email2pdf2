@@ -466,7 +466,7 @@ def output_body_pdf(input_email, payload, output_file_name):
 def remove_invalid_urls(payload):
     logger = logging.getLogger("email2pdf2")
 
-    soup = BeautifulSoup(payload, "html5lib")
+    soup = BeautifulSoup(payload, "html.parser")
 
     for img in soup.find_all('img'):
         if img.has_attr('src'):
