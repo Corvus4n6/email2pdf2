@@ -423,7 +423,7 @@ def handle_html_message_body(input_email, part):
 def output_body_pdf(input_email, payload, output_file_name):
     logger = logging.getLogger("email2pdf2")
 
-    wkh2p_process = Popen([WKHTMLTOPDF_EXTERNAL_COMMAND, '-q', '--load-error-handling', 'ignore',
+    wkh2p_process = Popen([WKHTMLTOPDF_EXTERNAL_COMMAND, '-q', '-s', 'Letter', '--load-error-handling', 'ignore',
                            '--load-media-error-handling', 'ignore', '--encoding', 'utf-8', '-',
                            output_file_name], stdin=PIPE, stdout=PIPE, stderr=PIPE)
     output, error = wkh2p_process.communicate(input=payload)
