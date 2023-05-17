@@ -6,7 +6,7 @@ setup(
     name='email2pdf2',
     version=versioneer.get_version(),
     packages=find_packages(exclude=["*tests*"]),
-    url='https://github.com/pyscioffice/email2pdf2',
+    url='https://github.com/Corvus4n6/email2pdf2',
     license='MIT',
     author='Andrew Ferrier',
     description='email2pdf2 is a Python script to convert emails to PDF.',
