@@ -276,7 +276,10 @@ def get_input_email(input_data):
         defects.extend(part.defects)
 
     if len(defects) > 0:
-        raise FatalException("Defects parsing email: " + pprint.pformat(defects))
+        #raise FatalException("Defects parsing email: " + pprint.pformat(defects))
+        # record error an parse it anyway - seems to be a bounce issue
+        logger = logging.getLogger("email2pdf2")
+        logger.debug("Defects parsing email: " + pprint.pformat(defects))
 
     return input_email
 
@@ -410,7 +413,11 @@ def handle_html_message_body(input_email, part):
             image_part = find_part_by_content_type_name(input_email, cid)
 
         if image_part is not None:
-            assert image_part['Content-Transfer-Encoding'] == 'base64'
+            try:
+                assert image_part['Content-Transfer-Encoding'] == 'base64'
+            except:
+                # rare issue with PNG header
+                return "broken"
             image_base64 = image_part.get_payload(decode=False)
             image_base64 = re.sub("[\r\n\t]", "", image_base64)
             image_decoded = image_part.get_payload(decode=True)
@@ -508,13 +515,8 @@ def can_url_fetch(src):
         encoded_src = src.replace(" ", "%20")
         req = Request(encoded_src)
         urlopen(req, timeout=10)  # Reduced timeout to avoid long try on broken external link
-    except HTTPError:
-        return False
-    except URLError:
-        return False
-    except ValueError:
-        return False
-    except TimeoutError:
+    except:
+        # just catch all http errors return false
         return False
     else:
         return True
@@ -706,13 +708,14 @@ def get_formatted_header_info(input_email):
     for part in input_email.iter_attachments():
         fn = part.get_filename()
         if fn:
-            att_info = att_info + '"' + fn + '"  (' + part.get_content_type() + ')  ' + f'{len(part.get_content()):,}' + ' bytes<br/>'
+            att_info = att_info + '"' + fn + '"  (' + part.get_content_type() + ')  ' + f'{len(part.get_payload(decode=True)):,}' + ' bytes<br/>'
+
     if att_info != "":
         att_info = "<b>Attachments:</b><br/>" + att_info
 
     header_info = header_info + att_info
 
-    return header_info + '<br/>'
+    return header_info + '<hr/>'
 
 # There are various different magic libraries floating around for Python, and
 # this function abstracts that out. The first clause is for `pip3 install
