@@ -42,7 +42,8 @@ HEADER_MAPPING = {'Author': 'From',
                   'Title': 'Subject',
                   'X-email2pdf-To': 'To'}
 
-FORMATTED_HEADERS_TO_INCLUDE = ['Subject', 'From', 'To', 'Date']
+#changed order of headers
+FORMATTED_HEADERS_TO_INCLUDE = ['Date', 'From', 'To', 'Subject']
 
 MIME_TYPES_BLACKLIST = frozenset(['text/html', 'text/plain'])
 
@@ -162,7 +163,7 @@ def handle_args(argv):
             raise FatalException(message)
 
     parser = ArgumentParser(description="Converts emails to PDFs. "
-                            "See https://github.com/pyscioffice/email2pdf2 for more information.", add_help=False)
+                            "See https://github.com/Corvus4n6/email2pdf2 for more information.", add_help=False)
 
     parser.add_argument("-i", "--input-file", default="-",
                         help="File containing input email you wish to read in raw form "
@@ -317,7 +318,10 @@ def handle_message_body(args, input_email):
             logger.debug("No body parts found, but using --no-body; proceeding.")
             return None, cid_parts_used
         else:
-            raise FatalException("No body parts found; aborting.")
+            #raise FatalException("No body parts found; aborting.")
+            # do it anyway - scanners do this to emails
+            logger.debug("No body parts found, but proceeding anyway.")
+            return "", cid_parts_used
     elif part.get_content_type() == 'text/html':
         (payload, cid_parts_used) = handle_html_message_body(input_email, part)
     elif part.get_content_type() == 'text/plain':
@@ -332,7 +336,10 @@ def handle_message_body(args, input_email):
                     logger.debug("No body parts found, but using --no-body; proceeding.")
                     return (None, cid_parts_used)
                 else:
-                    raise FatalException("No body parts found; aborting.")
+                    # raise FatalException("No body parts found; aborting.")
+                    # do it anyway - scanners do this to emails
+                    logger.debug("No body parts found, but proceeding anyway.")
+                    return "", cid_parts_used
             else:
                 payload = handle_plain_message_body(subpart)
         else:
@@ -423,7 +430,7 @@ def handle_html_message_body(input_email, part):
 def output_body_pdf(input_email, payload, output_file_name):
     logger = logging.getLogger("email2pdf2")
 
-    wkh2p_process = Popen([WKHTMLTOPDF_EXTERNAL_COMMAND, '-q', '-s', 'Letter', '--load-error-handling', 'ignore',
+    wkh2p_process = Popen([WKHTMLTOPDF_EXTERNAL_COMMAND, '-q', '-s', 'Letter', '--load-error-handling', 'ignore', '-B', '13mm', '-L', '13mm', '-R', '13mm', '-T', '13mm',
                            '--load-media-error-handling', 'ignore', '--encoding', 'utf-8', '-',
                            output_file_name], stdin=PIPE, stdout=PIPE, stderr=PIPE)
     output, error = wkh2p_process.communicate(input=payload)
@@ -693,6 +700,17 @@ def get_formatted_header_info(input_email):
             decoded_string = get_utf8_header(input_email[header])
             header_info = header_info + '<b>' + header + '</b>: ' + \
                           html.escape(decoded_string) + '<br/>'
+
+    # Add list of attachments to header - if any
+    att_info = ""
+    for part in input_email.iter_attachments():
+        fn = part.get_filename()
+        if fn:
+            att_info = att_info + '"' + fn + '"  (' + part.get_content_type() + ')  ' + f'{len(part.get_content()):,}' + ' bytes<br/>'
+    if att_info != "":
+        att_info = "<b>Attachments:</b><br/>" + att_info
+
+    header_info = header_info + att_info
 
     return header_info + '<br/>'
 
