@@ -707,7 +707,8 @@ def get_formatted_header_info(input_email):
     att_info = ""
     for part in input_email.iter_attachments():
         fn = part.get_filename()
-        if fn:
+        if fn and part.get_payload(decode=True):
+            # sometimes payload is None?
             att_info = att_info + '"' + fn + '"  (' + part.get_content_type() + ')  ' + f'{len(part.get_payload(decode=True)):,}' + ' bytes<br/>'
 
     if att_info != "":
