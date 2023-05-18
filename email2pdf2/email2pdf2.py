@@ -43,7 +43,7 @@ HEADER_MAPPING = {'Author': 'From',
                   'X-email2pdf-To': 'To'}
 
 #changed order of headers
-FORMATTED_HEADERS_TO_INCLUDE = ['Date', 'From', 'To', 'Subject']
+FORMATTED_HEADERS_TO_INCLUDE = ['Date', 'From', 'To', 'CC', 'BCC', 'Subject']
 
 MIME_TYPES_BLACKLIST = frozenset(['text/html', 'text/plain'])
 
